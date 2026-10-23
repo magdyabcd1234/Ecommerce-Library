@@ -1589,6 +1589,7 @@ function CoursePage({ course, isStarted, onStart, onBack, onNavigate, onOpenAssi
   const [showQuiz, setShowQuiz] = useState(false)
   const [quizAnswers, setQuizAnswers] = useState({})
   const [quizScore, setQuizScore] = useState(null)
+  const [currentQuizQuestion, setCurrentQuizQuestion] = useState(0)
   const [learnerName, setLearnerName] = useState('')
   const lessonListRef = useRef(null)
   const lesson = lessons[activeLesson]
@@ -1617,6 +1618,7 @@ function CoursePage({ course, isStarted, onStart, onBack, onNavigate, onOpenAssi
   const resetQuiz = () => {
     setQuizAnswers({})
     setQuizScore(null)
+    setCurrentQuizQuestion(0)
   }
 
   const copyExample = async () => {
@@ -1706,20 +1708,31 @@ function CoursePage({ course, isStarted, onStart, onBack, onNavigate, onOpenAssi
       </section>}
 
       {showQuiz && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6">
-        <section role="dialog" aria-modal="true" aria-labelledby="course-quiz-title" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-panel p-5 shadow-2xl sm:p-7">
+        <section role="dialog" aria-modal="true" aria-labelledby="course-quiz-title" className="flex h-[min(76vh,560px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-panel p-4 shadow-2xl sm:p-5">
           <div className="flex items-start justify-between gap-4">
-            <div><p className="text-xs font-semibold text-lime">اختبار المسار · 10 أسئلة · النجاح من 7/10</p><h2 id="course-quiz-title" className="mt-2 text-xl font-bold">اختبر فهمك في {course.language}</h2></div>
+            <div><p className="text-xs font-semibold text-lime">اختبار المسار · 10 أسئلة · النجاح من 7/10</p><h2 id="course-quiz-title" className="mt-1.5 text-lg font-bold">اختبر فهمك في {course.language}</h2></div>
             <button onClick={() => setShowQuiz(false)} aria-label="إغلاق الاختبار" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-white/60 hover:text-white"><X size={18} /></button>
           </div>
           {quizScore === null ? <>
-            <div className="mt-6 space-y-5">{quiz.map((question, questionIndex) => <fieldset key={question.prompt} className="rounded-xl border border-white/[0.08] p-4">
-              <legend className="px-2 text-sm font-semibold leading-7">{questionIndex + 1}. {question.prompt}</legend>
-              <div className="mt-2 space-y-2">{question.choices.map((choice) => <label key={choice} className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm leading-6 transition ${quizAnswers[questionIndex] === choice ? 'border-lime/40 bg-lime/[0.08]' : 'border-white/[0.06] hover:bg-white/[0.03]'}`}>
-                <input type="radio" name={`quiz-question-${questionIndex}`} checked={quizAnswers[questionIndex] === choice} onChange={() => setQuizAnswers((current) => ({ ...current, [questionIndex]: choice }))} className="mt-1 accent-lime" />
-                <span>{choice}</span>
-              </label>)}</div>
-            </fieldset>)}</div>
-            <button onClick={submitQuiz} disabled={Object.keys(quizAnswers).length !== quiz.length} className="mt-6 w-full rounded-xl bg-lime px-5 py-3 font-bold text-ink hover:bg-[#e2ff8c] disabled:cursor-not-allowed disabled:opacity-40">إرسال الإجابات</button>
+            <div className="mt-4">
+              <div className="mb-2 flex items-center justify-between text-xs text-white/45"><span>السؤال {currentQuizQuestion + 1} من {quiz.length}</span><span>تمت الإجابة {Object.keys(quizAnswers).length}/{quiz.length}</span></div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-lime transition-all" style={{ width: `${((currentQuizQuestion + 1) / quiz.length) * 100}%` }} /></div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto py-4">
+              <fieldset className="rounded-xl border border-white/[0.08] p-3 sm:p-4">
+                <legend className="px-2 text-sm font-semibold leading-6">{currentQuizQuestion + 1}. {quiz[currentQuizQuestion].prompt}</legend>
+                <div className="mt-2 space-y-2">{quiz[currentQuizQuestion].choices.map((choice) => <label key={choice} className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2 text-sm leading-6 transition ${quizAnswers[currentQuizQuestion] === choice ? 'border-lime/40 bg-lime/[0.08]' : 'border-white/[0.06] hover:bg-white/[0.03]'}`}>
+                  <input type="radio" name={`quiz-question-${currentQuizQuestion}`} checked={quizAnswers[currentQuizQuestion] === choice} onChange={() => setQuizAnswers((current) => ({ ...current, [currentQuizQuestion]: choice }))} className="mt-1 accent-lime" />
+                  <span>{choice}</span>
+                </label>)}</div>
+              </fieldset>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-white/[0.07] pt-3">
+              <button onClick={() => setCurrentQuizQuestion((current) => current - 1)} disabled={currentQuizQuestion === 0} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold transition hover:border-lime/40 disabled:cursor-not-allowed disabled:opacity-35"><ChevronRight size={16} className="inline" /> السابق</button>
+              {currentQuizQuestion < quiz.length - 1
+                ? <button onClick={() => setCurrentQuizQuestion((current) => current + 1)} className="rounded-xl bg-lime px-5 py-2.5 text-sm font-bold text-ink transition hover:bg-[#e2ff8c]">التالي <ChevronLeft size={16} className="inline" /></button>
+                : <div className="text-left"><button onClick={submitQuiz} disabled={Object.keys(quizAnswers).length !== quiz.length} className="rounded-xl bg-lime px-5 py-2.5 text-sm font-bold text-ink transition hover:bg-[#e2ff8c] disabled:cursor-not-allowed disabled:opacity-40">إرسال الإجابات</button>{Object.keys(quizAnswers).length !== quiz.length && <p className="mt-1 text-[10px] text-white/40">أجب عن كل الأسئلة أولًا</p>}</div>}
+            </div>
           </> : <div className="py-12 text-center">
             {quizScore >= 7 ? <CheckCircle2 size={48} className="mx-auto text-lime" /> : <RotateCcw size={48} className="mx-auto text-amber-300" />}
             <h3 className="mt-4 text-2xl font-bold">{quizScore}/10 {quizScore >= 7 ? '· اجتزت الاختبار!' : '· حاول مرة أخرى'}</h3>
@@ -1761,8 +1774,8 @@ function SiteNavbar({ page, onNavigate, onOpenAssistant, onInstallApp, course, o
             <button onClick={() => navigate('home', 'courses')} className="transition hover:text-lime">الدورات</button>
             <button onClick={() => navigate('home', 'paths')} className="transition hover:text-lime">المسارات</button>
             <button onClick={() => navigate('home', 'world-languages')} className="transition hover:text-lime">لغات العالم</button>
-            <button onClick={() => navigate('about')} className={`transition hover:text-lime ${page === 'about' ? 'text-lime' : ''}`}>About</button>
-            <button onClick={() => navigate('contact')} className={`transition hover:text-lime ${page === 'contact' ? 'text-lime' : ''}`}>Contact</button>
+            <button onClick={() => navigate('about')} className={`transition hover:text-lime ${page === 'about' ? 'text-lime' : ''}`}>عن المنصة</button>
+            <button onClick={() => navigate('contact')} className={`transition hover:text-lime ${page === 'contact' ? 'text-lime' : ''}`}>تواصل معنا</button>
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 xl:flex">
@@ -1783,8 +1796,8 @@ function SiteNavbar({ page, onNavigate, onOpenAssistant, onInstallApp, course, o
           <button onClick={() => navigate('home', 'courses')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">الدورات</button>
           <button onClick={() => navigate('home', 'paths')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">المسارات</button>
           <button onClick={() => navigate('home', 'world-languages')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">لغات العالم</button>
-          <button onClick={() => navigate('about')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">About</button>
-          <button onClick={() => navigate('contact')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">Contact</button>
+          <button onClick={() => navigate('about')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">عن المنصة</button>
+          <button onClick={() => navigate('contact')} className="rounded-lg px-3 py-3 text-right text-sm text-white/75 hover:bg-white/5">تواصل معنا</button>
           <button onClick={() => { setMobileMenu(false); onOpenAssistant() }} className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-lime hover:bg-white/5"><Bot size={16} /> اسأل AI</button>
           <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-[#55e889] hover:bg-white/5"><MessageCircle size={16} /> تواصل عبر واتساب</a>
         </nav>}
@@ -2111,7 +2124,7 @@ function InfoPage({ page, onNavigate, onOpenAssistant, onInstallApp }) {
           </section>
         </div> : <div className="space-y-8">
           <section className="relative overflow-hidden rounded-3xl border border-lime/15 bg-gradient-to-l from-lime/[0.12] via-lime/[0.04] to-transparent px-6 py-10 sm:px-10 sm:py-12">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-lime/20 bg-lime/[0.07] px-3.5 py-2 text-xs font-medium text-lime"><Mail size={14} /> Contact · خدمة المتعلمين</div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-lime/20 bg-lime/[0.07] px-3.5 py-2 text-xs font-medium text-lime"><Mail size={14} /> تواصل معنا · خدمة المتعلمين</div>
             <h1 className="text-4xl font-bold leading-tight sm:text-5xl">يسعدنا <span className="text-lime">نسمع منك.</span></h1>
             <p className="mt-4 max-w-2xl text-base leading-8 text-white/55">للاستفسار عن الدورات أو المساعدة في استخدام المنصة، تواصل معنا مباشرة عبر واتساب.</p>
           </section>
@@ -2353,7 +2366,7 @@ function App() {
         <div className="mx-auto flex max-w-[1240px] flex-col gap-4 px-5 py-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <a href="#" className="flex items-center gap-2 text-sm font-bold text-white/75"><span className="grid h-7 w-7 place-items-center rounded-lg bg-lime text-ink"><Code2 size={15} /></span> كود<span className="text-lime">.</span></a>
           <p>اتعلم النهارده، وابني بكرة. © ٢٠٢٥ كود</p>
-          <div className="flex gap-5"><button onClick={() => navigateTo('about')} className="transition hover:text-white/70">About</button><button onClick={() => navigateTo('contact')} className="transition hover:text-white/70">Contact</button><button onClick={() => navigateTo('home', 'courses')} className="transition hover:text-white/70">الدورات</button></div>
+          <div className="flex gap-5"><button onClick={() => navigateTo('about')} className="transition hover:text-white/70">عن المنصة</button><button onClick={() => navigateTo('contact')} className="transition hover:text-white/70">تواصل معنا</button><button onClick={() => navigateTo('home', 'courses')} className="transition hover:text-white/70">الدورات</button></div>
         </div>
       </footer>
 
