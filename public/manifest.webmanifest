@@ -1,0 +1,22 @@
+{
+  "name": "كود — منصة تعليم البرمجة ولغات العالم",
+  "short_name": "منصة كود",
+  "description": "منصة تعليمية متكاملة لتعلم لغات البرمجة وتقنيات الويب والذكاء الاصطناعي ولغات العالم مجانًا وبأسلوب عملي.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0c0d0c",
+  "theme_color": "#0c0d0c",
+  "lang": "ar",
+  "dir": "rtl",
+  "orientation": "any",
+  "categories": ["education", "books", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
